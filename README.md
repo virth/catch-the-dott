@@ -1,36 +1,158 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Catch the Dot
 
-## Getting Started
+Willkommen zum Schnuppertag, schön bist du da! Wir bauen heute ein kleines Mini-Game im Browser.
 
-First, run the development server:
+Du wirst dabei sehen, wie eine moderne Web-App aufgebaut ist und wie man mit React, Next.js und Tailwind CSS eine interaktive Oberfläche entwickelt.
+
+## Applikation starten
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Danach kannst du die App im Browser öffnen:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```txt
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+# Dateistruktur
 
-To learn more about Next.js, take a look at the following resources:
+```txt
+app/page.tsx
+components/game.tsx
+components/score-board.tsx
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Die wichtigste Datei für dich ist:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```txt
+components/game.tsx
+```
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Aufgaben
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 1. 👨‍🎨 Styling des Games verbessern
+
+Starte damit, das Game optisch nach deinem Geschmack zu verändern.
+
+Ein paar Ideen:
+
+- ändere die Hintergrundfarbe
+- ändere die Farbe des Buttons
+- mache den Punkt grösser oder kleiner
+- verwende ein anderes Emoji
+- passe Rundungen und Schatten an
+- ändere Texte oder Titel
+- gib dem Spiel einen eigenen Namen
+
+Du kannst dafür Tailwind CSS-Klassen direkt in der Komponente ändern.
+
+Beispiele:
+
+```tsx
+bg-zinc-950
+text-white
+rounded-full
+shadow-xl
+hover:scale-110
+```
+
+---
+
+## 2. 🐞 Fehler finden und beheben
+
+Im Spiel ist ein kleiner Fehler eingebaut.
+
+Der Punkt bewegt sich zwar nach oben und unten, aber nicht richtig nach links und rechts.
+
+Finde den Fehler im Code und korrigiere ihn.
+
+Tipp: Schau dir diese Stelle genau an:
+
+```tsx
+setX(ARENA_WIDTH / 2);
+setY(newY);
+```
+
+Was müsste statt `ARENA_WIDTH / 2` verwendet werden?
+
+---
+
+## 3. 🎯 Score erhöhen
+
+Aktuell passiert beim Klick auf den Punkt noch nicht alles, was passieren soll.
+
+Ergänze im `handleDotClick` die Logik, damit der Score bei jedem Klick um 1 steigt.
+
+Tipp:
+
+```tsx
+setScore(score + 1);
+```
+
+---
+
+## 4. ⌨️ Spiel mit Leertaste starten
+
+Ergänze eine Tastatursteuerung.
+
+Wenn man die Leertaste drückt, soll das Spiel starten.
+
+Dafür kannst du den vorbereiteten Code beim Kommentar `TODO 2` verwenden.
+
+---
+
+# Bonus-Aufgaben
+
+Wenn noch Zeit bleibt, kannst du das Spiel erweitern.
+
+## Bonus 1: Punkt wird kleiner
+
+Mache den Punkt kleiner, je höher der Score wird.
+
+Beispiel:
+
+```tsx
+const dotSize = Math.max(32, DOT_SIZE - score * 2);
+```
+
+Danach musst du beim Button `width` und `height` von `DOT_SIZE` auf `dotSize` ändern.
+
+## Bonus 2: Highscore speichern
+
+Speichere den besten Score und zeige ihn neben Punkte und Zeit an.
+
+## Bonus 3: Schwierigkeitsgrad
+
+Baue verschiedene Modi ein:
+
+- Easy: 30 Sekunden
+- Normal: 20 Sekunden
+- Hard: 10 Sekunden
+
+## Bonus 4: Andere Endtexte
+
+Zeige je nach Score einen anderen Text an:
+
+- 0–5 Punkte: "Solider Start."
+- 6–12 Punkte: "Stark gespielt!"
+- 13+ Punkte: "Sehr schnell!"
+
+## Bonus 5: Mobile verbessern
+
+Wie sieht das Game auf einem Smartphone aus?
+
+Kannst du das Layout so anpassen, dass es auch auf kleinen Screens gut funktioniert?
+
+---
+
+# Ziel
+
+Am Ende hast du ein kleines Game gebaut, gestylt, einen Bug gefunden und eine echte Funktion ergänzt.
+
+Das ist ziemlich nah an dem, was Entwicklerinnen und Entwickler im Alltag machen: verstehen, verändern, testen, verbessern.
