@@ -5,6 +5,8 @@ import { ScoreBoard } from "@/components/score-board";
 
 const ARENA_WIDTH = 700;
 const ARENA_HEIGHT = 420;
+const MIN_ARENA_WIDTH = 260;
+const MOBILE_ARENA_MARGIN = 48;
 const INITIAL_DOT_SIZE = 64;
 const MIN_DOT_SIZE = 24;
 const DOT_SIZE_DECREASE_PER_POINT = 2;
@@ -35,11 +37,13 @@ export function Game() {
   const [timeLeft, setTimeLeft] = useState<number>(MODE_SETTINGS.normal.duration);
   const [isPlaying, setIsPlaying] = useState(false);
   const [highScores, setHighScores] = useState<number[]>([]);
+  const [arenaWidth, setArenaWidth] = useState(ARENA_WIDTH);
 
   const [x, setX] = useState(200);
   const [y, setY] = useState(200);
   const latestScoreRef = useRef(score);
 
+  const arenaHeight = Math.round((arenaWidth * ARENA_HEIGHT) / ARENA_WIDTH);
   const dotSize = getDotSize(score);
   const emojiSize = dotSize * 0.5;
   const highestScore = highScores[0] ?? 0;
@@ -76,6 +80,32 @@ export function Game() {
     );
   }, [highScores]);
 
+  useEffect(() => {
+    function syncArenaSize() {
+      const availableWidth = window.innerWidth - MOBILE_ARENA_MARGIN;
+      const nextWidth = Math.min(
+        ARENA_WIDTH,
+        Math.max(MIN_ARENA_WIDTH, Math.floor(availableWidth)),
+      );
+      setArenaWidth(nextWidth);
+    }
+
+    syncArenaSize();
+    window.addEventListener("resize", syncArenaSize);
+
+    return () => {
+      window.removeEventListener("resize", syncArenaSize);
+    };
+  }, []);
+
+  useEffect(() => {
+    const padding = dotSize / 2;
+    setX((currentX) => Math.min(Math.max(currentX, padding), arenaWidth - padding));
+    setY((currentY) =>
+      Math.min(Math.max(currentY, padding), arenaHeight - padding),
+    );
+  }, [arenaWidth, arenaHeight, dotSize]);
+
   function startGame() {
     setScore(0);
     setTimeLeft(modeDuration);
@@ -92,8 +122,8 @@ export function Game() {
   function moveDot(currentScore = score) {
     const padding = getDotSize(currentScore) / 2;
 
-    newX = Math.random() * (ARENA_WIDTH - padding * 2) + padding;
-    newY = Math.random() * (ARENA_HEIGHT - padding * 2) + padding;
+    newX = Math.random() * (arenaWidth - padding * 2) + padding;
+    newY = Math.random() * (arenaHeight - padding * 2) + padding;
 
     // 🐞 Bug-Aufgabe:
     // Der Punkt bewegt sich aktuell nur nach oben und unten.
@@ -190,8 +220,8 @@ useEffect(() => {
 
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
         <div
-          className="relative overflow-hidden rounded-3xl border-2 border-zinc-200 bg-gradient-to-br from-zinc-200 to-white"
-          style={{ width: ARENA_WIDTH, height: ARENA_HEIGHT }}
+          className="relative w-full overflow-hidden rounded-3xl border-2 border-zinc-200 bg-gradient-to-br from-zinc-200 to-white"
+          style={{ width: arenaWidth, height: arenaHeight, maxWidth: "100%" }}
         >
           <button
             type="button"
