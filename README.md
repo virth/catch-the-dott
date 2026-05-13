@@ -131,9 +131,9 @@ Speichere den besten Score und zeige ihn neben Punkte und Zeit an.
 
 Baue verschiedene Modi ein:
 
-- Easy: 30 Sekunden
-- Normal: 20 Sekunden
-- Hard: 10 Sekunden
+- Easy: 1 Minute
+- Normal: 1 Minute
+- Hard: 1 Minute
 
 ## Bonus 4: Andere Endtexte
 
