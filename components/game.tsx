@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ScoreBoard } from "@/components/score-board";
 
 const ARENA_WIDTH = 700;
@@ -10,6 +10,8 @@ const MOBILE_ARENA_MARGIN = 48;
 const INITIAL_DOT_SIZE = 64;
 const MIN_DOT_SIZE = 24;
 const DOT_BIGGER_BOOST_PX = 18;
+/** Extra Abstand Rand: Aura, Ring, Hover-Scale, Schatten (fix, kein Formelzauber). */
+const PLAYFIELD_EDGE_PX = 20;
 const DOT_SIZE_DECREASE_PER_POINT = 2;
 const HIGH_SCORES_LIMIT = 5;
 const HIGH_SCORES_STORAGE_KEY = "catch-the-dot-high-scores";
@@ -69,14 +71,8 @@ function getDotPixelSizeForScore(currentScore: number, biggerDot: boolean) {
   );
 }
 
-/** Slack from center beyond half the hitbox: aura, energy ring, hover scale, shadow, subpixels. */
-function getDotPlayfieldEdgeSlackPx(dotPixelSize: number) {
-  return 12 + Math.round(dotPixelSize * 0.2);
-}
-
 function getDotCenterClampPadding(currentScore: number, biggerDot: boolean) {
-  const d = getDotPixelSizeForScore(currentScore, biggerDot);
-  return d / 2 + getDotPlayfieldEdgeSlackPx(d);
+  return getDotPixelSizeForScore(currentScore, biggerDot) / 2 + PLAYFIELD_EDGE_PX;
 }
 
 export function Game() {
@@ -92,6 +88,11 @@ export function Game() {
   const [wheelRotation, setWheelRotation] = useState(0);
   const [isSpinningWheel, setIsSpinningWheel] = useState(false);
   const [arenaWidth, setArenaWidth] = useState(ARENA_WIDTH);
+  const arenaPlayfieldRef = useRef<HTMLDivElement>(null);
+  const [playfieldSize, setPlayfieldSize] = useState({
+    width: ARENA_WIDTH,
+    height: ARENA_HEIGHT,
+  });
 
   const [x, setX] = useState(200);
   const [y, setY] = useState(200);
@@ -102,7 +103,6 @@ export function Game() {
     {},
   );
 
-  const arenaHeight = Math.round((arenaWidth * ARENA_HEIGHT) / ARENA_WIDTH);
   const dotSizeBoost = activeLuckyEffects["bigger-dot"] ? DOT_BIGGER_BOOST_PX : 0;
   const dotSize = Math.max(MIN_DOT_SIZE, getDotSize(score) + dotSizeBoost);
   const highestScore = highScores[0] ?? 0;
@@ -206,13 +206,31 @@ export function Game() {
     };
   }, []);
 
+  useLayoutEffect(() => {
+    const node = arenaPlayfieldRef.current;
+    if (!node) return;
+
+    function measure() {
+      const w = node.clientWidth;
+      const h = node.clientHeight;
+      if (w <= 0 || h <= 0) return;
+      setPlayfieldSize((prev) =>
+        prev.width === w && prev.height === h ? prev : { width: w, height: h },
+      );
+    }
+
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(node);
+    return () => ro.disconnect();
+  }, [arenaWidth]);
+
   useEffect(() => {
     const padding = getDotCenterClampPadding(score, activeLuckyEffects["bigger-dot"]);
-    setX((currentX) => Math.min(Math.max(currentX, padding), arenaWidth - padding));
-    setY((currentY) =>
-      Math.min(Math.max(currentY, padding), arenaHeight - padding),
-    );
-  }, [arenaWidth, arenaHeight, score, activeLuckyEffects["bigger-dot"]]);
+    const { width: pw, height: ph } = playfieldSize;
+    setX((currentX) => Math.min(Math.max(currentX, padding), pw - padding));
+    setY((currentY) => Math.min(Math.max(currentY, padding), ph - padding));
+  }, [playfieldSize.width, playfieldSize.height, score, activeLuckyEffects["bigger-dot"]]);
 
   function startGame() {
     roundFinalizedRef.current = false;
@@ -221,22 +239,22 @@ export function Game() {
     setActiveLuckyEffects(INITIAL_LUCKY_EFFECTS);
     setLastLuckyReward(null);
     setIsPlaying(true);
-    moveDot(0);
+    moveDot(0, false);
   }
 
   function stopGame() {
     finalizeGame();
   }
 
-  function moveDot(currentScore = score) {
-    const biggerDot = activeLuckyEffectsRef.current["bigger-dot"];
-    const padding = getDotCenterClampPadding(currentScore, biggerDot);
-    const innerW = arenaWidth - padding * 2;
-    const innerH = arenaHeight - padding * 2;
+  function moveDot(scoreForSize: number, biggerDot: boolean) {
+    const padding = getDotCenterClampPadding(scoreForSize, biggerDot);
+    const { width: pw, height: ph } = playfieldSize;
+    const innerW = pw - padding * 2;
+    const innerH = ph - padding * 2;
 
     if (innerW <= 0 || innerH <= 0) {
-      setX(arenaWidth / 2);
-      setY(arenaHeight / 2);
+      setX(pw / 2);
+      setY(ph / 2);
       return;
     }
 
@@ -259,7 +277,7 @@ export function Game() {
     // Tipp:
     // setScore(...)
 
-    moveDot(nextScore);
+    moveDot(nextScore, activeLuckyEffects["bigger-dot"]);
   }
 
   function applyLuckyReward(reward: LuckyReward) {
@@ -338,13 +356,16 @@ export function Game() {
 
     const missTimer = window.setTimeout(() => {
       if (activeLuckyEffectsRef.current.shield) {
-        moveDot(latestScoreRef.current);
+        moveDot(
+          latestScoreRef.current,
+          activeLuckyEffectsRef.current["bigger-dot"],
+        );
         return;
       }
 
       setScore((currentScore) => {
         const nextScore = Math.max(0, currentScore - 1);
-        moveDot(nextScore);
+        moveDot(nextScore, activeLuckyEffectsRef.current["bigger-dot"]);
         return nextScore;
       });
     }, HARD_MISS_TIMEOUT_MS);
@@ -397,8 +418,13 @@ useEffect(() => {
           </div>
 
           <div
+            ref={arenaPlayfieldRef}
             className="relative mx-auto overflow-hidden rounded-xl border border-violet-300 bg-white/90 shadow-inner"
-            style={{ width: arenaWidth, height: arenaHeight, maxWidth: "100%" }}
+            style={{
+              width: arenaWidth,
+              maxWidth: "100%",
+              aspectRatio: `${ARENA_WIDTH} / ${ARENA_HEIGHT}`,
+            }}
           >
           <div
             className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-br from-violet-100/40 via-transparent to-indigo-100/50"
