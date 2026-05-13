@@ -24,3 +24,38 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@keyframes catch-dot-energy-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes catch-dot-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+.catch-dot-energy-ring {
+  animation: catch-dot-energy-spin 3.2s linear infinite;
+}
+
+.catch-dot-aura {
+  animation: catch-dot-breathe 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .catch-dot-energy-ring,
+  .catch-dot-aura {
+    animation: none;
+  }
+
+  .catch-dot-aura {
+    opacity: 0.65;
+  }
+}
